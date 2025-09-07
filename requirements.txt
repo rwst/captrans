@@ -1,0 +1,4 @@
+PyQt6>=6.0.0
+SpeechRecognition>=3.8.1
+deep-translator>=1.4.0
+requests>=2.25.0

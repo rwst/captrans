@@ -1,0 +1,4 @@
+{
+    "ngrok_url": "https://example.ngrok-free.app/command",
+    "send_commands": true
+}
