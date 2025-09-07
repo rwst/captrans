@@ -5,7 +5,8 @@ from googletrans import Translator
 
 # --- CONFIGURATION ---
 # IMPORTANT: Replace this URL with the public ngrok URL printed by your Colab notebook.
-COLAB_URL = "https://<your-ngrok-subdomain>.ngrok.io/command"
+# COLAB_URL = "https://<your-ngrok-subdomain>.ngrok.io/command"
+COLAB_URL = "http://127.0.0.1"
 
 def capture_speech_german():
     """
