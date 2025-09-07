@@ -1,6 +1,7 @@
 import subprocess
 import json
 import requests
+import argparse
 from googletrans import Translator
 
 # --- CONFIGURATION ---
@@ -56,13 +57,18 @@ def translate_to_english(text):
         print(f"   -> Translation failed. Error: {e}")
         return None
 
-def send_command_to_colab(command):
+def send_command_to_colab(command, print_only=False):
     """
     Sends the command to the Google Colab server via an HTTP POST request.
     Returns True on success, False on failure.
     """
     if not command:
         return False
+    
+    if print_only:
+        print(f"🖨️  Print-only mode: {command}")
+        return True
+    
     print(f"   Sending command to Colab at {COLAB_URL}...")
     try:
         payload = {"command": command}
@@ -84,17 +90,25 @@ def send_command_to_colab(command):
 
 def main():
     """Main loop to continuously listen, translate, and send commands."""
+    parser = argparse.ArgumentParser(description="Android Voice Control for LeRobot")
+    parser.add_argument("-p", "--print-only", action="store_true", 
+                        help="Print the English command instead of sending it to Colab")
+    
+    args = parser.parse_args()
+    print_only = args.print_only
+    
     print("--- Android Voice Control for LeRobot ---")
-    if "your-ngrok-subdomain" in COLAB_URL:
-        print("\n⚠️ WARNING: Please edit this script and replace the placeholder COLAB_URL.")
-        return
+    if not print_only:
+        if "your-ngrok-subdomain" in COLAB_URL:
+            print("\n⚠️ WARNING: Please edit this script and replace the placeholder COLAB_URL.")
+            return
 
     while True:
         german_text = capture_speech_german()
         if german_text:
             english_command = translate_to_english(german_text)
             if english_command:
-                send_command_to_colab(english_command)
+                send_command_to_colab(english_command, print_only)
 
 if __name__ == "__main__":
     main()
