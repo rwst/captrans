@@ -10,7 +10,7 @@ import os
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QPushButton, 
     QCheckBox, QLineEdit, QListWidget, QGroupBox,
-    QHBoxLayout, QVBoxLayout, QLabel
+    QHBoxLayout, QVBoxLayout, QLabel, QMessageBox
 )
 from PyQt6.QtCore import Qt, QThread, pyqtSignal, QByteArray, QBuffer, QIODevice
 from PyQt6.QtMultimedia import QAudioInput, QMediaDevices, QAudioFormat
@@ -185,6 +185,11 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("LeRobot Voice Commander")
         self.setGeometry(100, 100, 1200, 500)
         
+        # Check for microphone availability
+        audio_device = QMediaDevices.defaultAudioInput()
+        if audio_device.isNull():
+            self.log_error("No microphone detected. Application may not function properly.")
+        
         # Create central widget and main layout
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
@@ -291,12 +296,21 @@ class MainWindow(QMainWindow):
         
         # Get default audio input device
         audio_device = QMediaDevices.defaultAudioInput()
+        if audio_device.isNull():
+            self.handle_no_microphone()
+            return
+            
         if not audio_device.isFormatSupported(audio_format):
             self.log_error("Audio format not supported")
             return
             
         # Create audio input
-        self.audio_input = QAudioInput(audio_device, audio_format)
+        try:
+            self.audio_input = QAudioInput(audio_device)
+            self.audio_input.setFormat(audio_format)
+        except Exception as e:
+            self.handle_no_microphone()
+            return
         
         # Create buffer to store audio data
         self.audio_buffer = QBuffer()
@@ -324,6 +338,26 @@ class MainWindow(QMainWindow):
         # Clean up
         self.audio_input = None
         self.audio_buffer = None
+        
+    def handle_no_microphone(self):
+        """Handle the case when no microphone is available."""
+        # Reset the listening state
+        self.is_listening = False
+        self.mic_button.setChecked(False)
+        self.mic_button.setText("Listen")
+        self.mic_button.setStyleSheet("")
+        
+        # Show error message
+        msg_box = QMessageBox()
+        msg_box.setIcon(QMessageBox.Icon.Information)
+        msg_box.setWindowTitle("Microphone Not Found")
+        msg_box.setText("Mic not found")
+        msg_box.setInformativeText("No microphone was detected on this system.")
+        msg_box.setStandardButtons(QMessageBox.StandardButton.Ok)
+        msg_box.exec()
+        
+        # Close the application
+        self.close()
         
     def toggle_sending(self, state):
         """Toggle whether commands should be sent to the robot."""
