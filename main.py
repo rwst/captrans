@@ -183,7 +183,7 @@ class MainWindow(QMainWindow):
     def init_ui(self):
         """Initialize the user interface."""
         self.setWindowTitle("LeRobot Voice Commander")
-        self.setGeometry(100, 100, 800, 500)
+        self.setGeometry(100, 100, 1200, 500)
         
         # Create central widget and main layout
         central_widget = QWidget()
@@ -193,12 +193,6 @@ class MainWindow(QMainWindow):
         # Create left pane
         left_pane = QVBoxLayout()
         
-        # Microphone button
-        self.mic_button = QPushButton("Listen")
-        self.mic_button.setCheckable(True)
-        self.mic_button.clicked.connect(self.toggle_listening)
-        left_pane.addWidget(self.mic_button)
-        
         # Sending toggle
         self.send_toggle = QCheckBox("Send commands to robot")
         self.send_toggle.setChecked(self.is_sending_enabled)
@@ -207,6 +201,7 @@ class MainWindow(QMainWindow):
         
         # ngrok URL group
         self.url_group = QGroupBox("Target URL")
+        self.url_group.setAlignment(Qt.AlignmentFlag.AlignTop)  # Prevent filling vertical space
         url_layout = QHBoxLayout()
         
         self.url_input = QLineEdit()
@@ -220,6 +215,28 @@ class MainWindow(QMainWindow):
         
         self.url_group.setLayout(url_layout)
         left_pane.addWidget(self.url_group)
+        
+        # Set initial state of URL group based on send toggle
+        self.url_group.setEnabled(self.is_sending_enabled)
+        
+        # Add spacer to push mic button to bottom
+        left_pane.addStretch()
+        
+        # Microphone button (now at the bottom)
+        self.mic_button = QPushButton("Listen")
+        self.mic_button.setCheckable(True)
+        self.mic_button.clicked.connect(self.toggle_listening)
+        # Set fixed size to make it square
+        self.mic_button.setFixedSize(100, 100)
+        # Create a container widget to center the button
+        button_container = QWidget()
+        button_layout = QHBoxLayout(button_container)
+        button_layout.addWidget(self.mic_button)
+        button_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        left_pane.addWidget(button_container)
+        
+        # Add another stretch to center the button vertically
+        left_pane.addStretch()
         
         # Add left pane to main layout
         main_layout.addLayout(left_pane)
@@ -254,7 +271,7 @@ class MainWindow(QMainWindow):
         """Toggle the listening state."""
         if self.mic_button.isChecked():
             self.mic_button.setText("Stop")
-            self.mic_button.setStyleSheet("background-color: red")
+            self.mic_button.setStyleSheet("background-color: red; border-radius: 5px;")
             self.start_listening()
         else:
             self.mic_button.setText("Listen")
@@ -314,12 +331,15 @@ class MainWindow(QMainWindow):
         self.worker_thread.update_config(self.ngrok_url, self.is_sending_enabled)
         self.save_config()
         self.log_message(f"Sending {'enabled' if self.is_sending_enabled else 'disabled'}")
+        # Enable/disable the URL group based on the sending state
+        self.url_group.setEnabled(self.is_sending_enabled)
         
     def toggle_url_edit(self):
         """Toggle the edit mode for the ngrok URL."""
         if self.url_input.isReadOnly():
             self.url_input.setReadOnly(False)
             self.url_edit_button.setText("Save")
+            self.url_input.setFocus()  # Focus the input field for editing
         else:
             self.ngrok_url = self.url_input.text()
             self.url_input.setReadOnly(True)
