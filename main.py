@@ -8,6 +8,7 @@ import io
 import json
 import os
 import wave
+from datetime import datetime
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QPushButton,
     QCheckBox, QLineEdit, QTextEdit, QGroupBox,
@@ -65,6 +66,9 @@ class WorkerThread(QThread):
             else:
                 self.error_occurred.emit("Speech recognition returned empty text.")
 
+        except sr.UnknownValueError:
+            self.error_occurred.emit("Speech could not be understood")
+            self.save_failed_audio(audio_data, sample_rate, sample_width)
         except Exception as e:
             self.error_occurred.emit(str(e))
 
@@ -92,11 +96,29 @@ class WorkerThread(QThread):
             )
             return german_text
         except sr.UnknownValueError:
-            raise Exception("Speech could not be understood")
+            raise
         except sr.RequestError as e:
             raise Exception(f"Could not request results from Google Speech Recognition service; {e}")
         except Exception as e:
             raise Exception(f"Speech recognition failed: {str(e)}")
+
+    def save_failed_audio(self, audio_data, sample_rate, sample_width):
+        """Save failed audio to a file."""
+        try:
+            if not os.path.exists("failed_audio"):
+                os.makedirs("failed_audio")
+
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"failed_audio/failed_{timestamp}.wav"
+
+            with wave.open(filename, 'wb') as wf:
+                wf.setnchannels(1)  # Mono
+                wf.setsampwidth(sample_width)
+                wf.setframerate(sample_rate)
+                wf.writeframes(audio_data.data())
+            self.status_update.emit(f"Saved failed audio to {filename}")
+        except Exception as e:
+            self.error_occurred.emit(f"Failed to save audio: {str(e)}")
 
     def translate_text(self, german_text):
         """Translate German text to English."""
