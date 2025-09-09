@@ -10,7 +10,7 @@ import os
 import wave
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QPushButton,
-    QCheckBox, QLineEdit, QListWidget, QGroupBox,
+    QCheckBox, QLineEdit, QTextEdit, QGroupBox,
     QHBoxLayout, QVBoxLayout, QLabel, QMessageBox
 )
 from PyQt6.QtCore import Qt, QThread, pyqtSignal, QBuffer, QIODevice
@@ -214,7 +214,8 @@ class MainWindow(QMainWindow):
 
         right_pane = QVBoxLayout()
         right_pane.addWidget(QLabel("Command Log:"))
-        self.log_view = QListWidget()
+        self.log_view = QTextEdit()
+        self.log_view.setReadOnly(True)
         right_pane.addWidget(self.log_view)
         main_layout.addLayout(right_pane)
 
@@ -344,28 +345,23 @@ class MainWindow(QMainWindow):
 
     def log_message(self, message):
         """Add an info message to the log view."""
-        self.log_view.addItem(f"[INFO] {message}")
-        self.log_view.scrollToBottom()
+        self.log_view.append(f"[INFO] {message}")
 
     def log_error(self, error_message):
         """Add an error message to the log view."""
-        self.log_view.addItem(f"[ERROR] {error_message}")
-        self.log_view.scrollToBottom()
+        self.log_view.append(f"[ERROR] {error_message}")
 
     def update_german_text(self, text):
         """Update UI with recognized German text."""
-        self.log_view.addItem(f'[DE] "{text}"')
-        self.log_view.scrollToBottom()
+        self.log_view.append(f'[DE] "{text}"')
 
     def update_english_text(self, text):
         """Update UI with translated English text."""
-        self.log_view.addItem(f'[EN] "{text}"')
-        self.log_view.scrollToBottom()
+        self.log_view.append(f'[EN] "{text}"')
 
     def command_sent(self):
         """Update UI when command is successfully sent."""
-        self.log_view.addItem("[SEND] Command sent successfully.")
-        self.log_view.scrollToBottom()
+        self.log_view.append("[SEND] Command sent successfully.")
 
 def main():
     """Main application entry point."""
